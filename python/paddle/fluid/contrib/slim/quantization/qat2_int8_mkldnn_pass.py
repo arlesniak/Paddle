@@ -356,6 +356,7 @@ class Qat2Int8MkldnnPass(object):
         if self._is_fc_quantized:
             graph = self._apply_pass(graph, 'fc_mkldnn_pass')
         graph = self._apply_pass(graph, 'matmul_transpose_reshape_fuse_pass')
+        print("Welcome!!!")
         return graph
 
     def _apply_pass(self, graph, pass_name, attrs=None, attr_values=None):
@@ -489,5 +490,18 @@ class Qat2Int8MkldnnPass(object):
         graph = self._apply_pass(
             graph, 'cpu_quantize_pass', ['quant_var_scales', 'data_layout'],
             [self._var_quant_scales, self._get_data_layout()])
+        print("Printuje")
+        import paddle
+        import paddle.fluid as fluid
+        # tensors_list = list(map(lambda v: v.name, filter(lambda v: isinstance(v, paddle.fluid.framework.Parameter), graph.all_persistable_nodes())))
+        # tensors_list = list(map(lambda v: v.name, filter(lambda v: isinstance(v, paddle.fluid.framework.Parameter), graph.to_program().list_vars())))
+
+        # inference_program = graph.to_program().list_vars()
+        # tensors_list = [s for s in list(inference_program.list_vars()) if s.name not in ["feed","fetch"]]
+        # print(tensors_list)
+
+        # for op in graph.all_op_nodes():
+        #     if len(op.node.inputs):
+        #         print(op.node.inputs[0].name()) #, op.node.inputs[0].var().dtype())
         graph = self._apply_pass(graph, 'cpu_quantize_squash_pass')
         return graph

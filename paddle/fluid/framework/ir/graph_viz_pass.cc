@@ -38,6 +38,31 @@ std::string FormatName(const Node* node) {
 }
 }  // namespace
 
+std::string VarTypeToStr(const framework::proto::VarType_Type type) {
+ switch (type) {
+  case framework::proto::VarType_Type_BOOL:
+   return "bool";
+  case framework::proto::VarType_Type_FP32:
+   return "fp32";
+  case framework::proto::VarType_Type_INT32:
+   return "int32";
+  case framework::proto::VarType_Type_INT64:
+   return "int64";
+  case framework::proto::VarType_Type_INT16:
+   return "int16";
+  case framework::proto::VarType_Type_FP16:
+   return "fp16";
+  case framework::proto::VarType_Type_FP64:
+   return "fp64";
+  case framework::proto::VarType_Type_UINT8:
+   return "uint8";
+  case framework::proto::VarType_Type_INT8:
+   return "int8";
+  default:
+   PADDLE_THROW("Unknown data type");
+ }
+}
+
 void GraphVizPass::ApplyImpl(ir::Graph* graph) const {
   const std::string& graph_viz_path = Get<std::string>(kGraphvizPath);
   VLOG(3) << "draw IR graph viz to " << graph_viz_path;
@@ -100,6 +125,7 @@ void GraphVizPass::ApplyImpl(ir::Graph* graph) const {
             node_id += "," + std::to_string(length);
           }
         }
+       node_id += " [" + VarTypeToStr(n->Var()->GetDataType()) + "]";
       }
       decltype(op_attrs)* attr;
       if (marked_nodes.count(n)) {
@@ -121,6 +147,12 @@ void GraphVizPass::ApplyImpl(ir::Graph* graph) const {
     for (auto* out : n->outputs) {
       const auto& trg_id = node2dot.at(out);
       dot.AddEdge(src_id, trg_id, {});
+//      dot.AddEdge(src_id, trg_id, std::vector<Dot::Attr> ({Dot::Attr("color", "red")}));
+//     if (n->IsVar()) {
+//      dot.AddEdge(src_id, trg_id,
+//                  std::vector<Dot::Attr>({Dot::Attr("label", std::to_string(n->Var()->GetDataType())),
+//                                          Dot::Attr("color", "red")}));
+//     }
     }
   }
 

@@ -203,6 +203,17 @@ void VarBase::ClearGradient() {
             platform::DeviceContextPool::Instance().Get(grad_t->place());
         operators::math::set_constant(*dev_ctx, grad_t, 0.0);
       }
+#ifdef PADDLE_WITH_MKLDNN
+     // Clear mkl-dnn cache,
+     if (platform::is_cpu_place(grad_t->place())) {
+      platform::DeviceContextPool &pool = platform::DeviceContextPool::Instance();
+      platform::MKLDNNDeviceContext *dev_ctx =
+              (platform::MKLDNNDeviceContext *)pool.Get(grad_t->place());
+      dev_ctx->ResetBlobMap();
+      platform::MKLDNNDeviceContext::tls().set_cur_paddle_data_layout(
+              paddle::framework::DataLayout::kNCHW);
+     }
+#endif
     }
   }
 }

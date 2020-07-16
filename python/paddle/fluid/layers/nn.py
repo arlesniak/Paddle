@@ -9311,7 +9311,7 @@ def elu(x, alpha=1.0, name=None):
 
 
 @templatedoc()
-def relu6(x, threshold=6.0, name=None):
+def relu6(x, threshold=6.0, name=None, use_mkldnn=False):
     """
     :alias_main: paddle.nn.functional.relu6
 	:alias: paddle.nn.functional.relu6,paddle.nn.functional.activation.relu6
@@ -9325,6 +9325,7 @@ def relu6(x, threshold=6.0, name=None):
         name(str, optional): The default value is None. Normally there is no
             need for user to set this property. For more information, please
             refer to :ref:`api_guide_Name`.
+        use_mkldnn (bool, optional): Whether to use mkldnn False by default.
 
     Returns:
         output(${out_type}): ${out_comment}
@@ -9351,7 +9352,7 @@ def relu6(x, threshold=6.0, name=None):
         type='relu6',
         inputs={'X': x},
         outputs={'Out': out},
-        attrs={'threshold': threshold})
+        attrs={'threshold': threshold, 'use_mkldnn': use_mkldnn})
     return out
 
 

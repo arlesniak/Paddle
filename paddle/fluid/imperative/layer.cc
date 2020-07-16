@@ -28,6 +28,9 @@
 #include "paddle/fluid/platform/device_context.h"
 #include "paddle/fluid/platform/enforce.h"
 #include "paddle/fluid/platform/profiler.h"
+#ifdef PADDLE_WITH_MKLDNN
+#include "paddle/fluid/platform/mkldnn_helper.h"
+#endif
 
 namespace paddle {
 namespace imperative {
@@ -192,6 +195,9 @@ void VarBase::ClearGradient() {
       auto* grad_t =
           grad_var_->MutableVar()->GetMutable<framework::SelectedRows>();
       if (grad_t->mutable_value()->IsInitialized()) {
+#ifdef PADDLE_WITH_MKLDNN
+       ClearMKLDNNCache(grad_t->place());
+#endif
         grad_t->mutable_rows()->clear();
         grad_t->mutable_value()->clear();
       }
@@ -202,18 +208,10 @@ void VarBase::ClearGradient() {
         auto* dev_ctx =
             platform::DeviceContextPool::Instance().Get(grad_t->place());
         operators::math::set_constant(*dev_ctx, grad_t, 0.0);
-      }
 #ifdef PADDLE_WITH_MKLDNN
-     // Clear mkl-dnn cache,
-     if (platform::is_cpu_place(grad_t->place())) {
-      platform::DeviceContextPool &pool = platform::DeviceContextPool::Instance();
-      platform::MKLDNNDeviceContext *dev_ctx =
-              (platform::MKLDNNDeviceContext *)pool.Get(grad_t->place());
-      dev_ctx->ResetBlobMap();
-      platform::MKLDNNDeviceContext::tls().set_cur_paddle_data_layout(
-              paddle::framework::DataLayout::kNCHW);
-     }
+     ClearMKLDNNCache(grad_t->place());
 #endif
+      }
     }
   }
 }

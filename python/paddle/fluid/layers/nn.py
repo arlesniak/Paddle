@@ -1181,7 +1181,7 @@ def chunk_eval(input,
             num_correct_chunks)
 
 
-def softmax(input, use_cudnn=False, name=None, axis=-1):
+def softmax(input, use_cudnn=False, use_mkldnn=False, name=None, axis=-1):
     """
     :alias_main: paddle.nn.functional.softmax
 	:alias: paddle.nn.functional.softmax,paddle.nn.functional.activation.softmax
@@ -1266,6 +1266,7 @@ def softmax(input, use_cudnn=False, name=None, axis=-1):
         use_cudnn (bool, optional): Use cudnn kernel or not, it is valid only when the cudnn \
             library is installed. To improve numerical stability, set use_cudnn to \
             False by default.
+        use_mkldnn (bool, optional): Whether to use mkldnn False by default.
         name (str, optional): The default value is None. Normally there is no need for user to set this property. For more information, please refer to :ref:`api_guide_Name` . Default: None.
             will be named automatically. Default: None.
         axis (int, optional): The index of dimension to perform softmax calculations, it should
@@ -1294,10 +1295,11 @@ def softmax(input, use_cudnn=False, name=None, axis=-1):
     """
 
     if in_dygraph_mode():
-        return core.ops.softmax(input, 'axis', axis, 'use_cudnn', use_cudnn)
+        return core.ops.softmax(input, 'axis', axis, 'use_cudnn', use_cudnn,
+                                'use_mkldnn', use_mkldnn)
 
     inputs = {"X": [input]}
-    attrs = {"axis": axis, "use_cudnn": use_cudnn}
+    attrs = {"axis": axis, "use_cudnn": use_cudnn, 'use_mkldnn': use_mkldnn}
 
     helper = LayerHelper('softmax', **locals())
     check_variable_and_dtype(input, 'input', ['float16', 'float32', 'float64'],
@@ -11317,7 +11319,7 @@ def scale(x, scale=1.0, bias=0.0, bias_after_scale=True, act=None, name=None):
     return helper.append_activation(out)
 
 
-def elementwise_add(x, y, axis=-1, act=None, name=None):
+def elementwise_add(x, y, axis=-1, act=None, name=None, use_mkldnn=False):
     """
     :alias_main: paddle.elementwise_add
 	:alias: paddle.elementwise_add,paddle.tensor.elementwise_add,paddle.tensor.math.elementwise_add
@@ -11400,7 +11402,12 @@ Examples:
     """
     if in_dygraph_mode():
         return _elementwise_op_in_dygraph(
-            x, y, axis=axis, act=act, op_name='elementwise_add')
+            x,
+            y,
+            axis=axis,
+            act=act,
+            op_name='elementwise_add',
+            use_mkldnn=use_mkldnn)
 
     return _elementwise_op(LayerHelper('elementwise_add', **locals()))
 
